@@ -1,0 +1,30 @@
+{
+  "name": "socialize",
+  "version": "1.0.0",
+  "description": "Mongoose back-end challenge",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index",
+    "dev": "nodemon index",
+    "seed": "node utils/seed",
+    "heroku-postbuild": "node utils/seed.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^6.9.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jdelvalle12/socialize.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jdelvalle12/socialize/issues"
+  },
+  "homepage": "https://github.com/jdelvalle12/socialize#readme"
+}

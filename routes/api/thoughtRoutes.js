@@ -30,4 +30,4 @@ router.route('/:thoughtId/reactions/:reactionId').put(updateReaction);
 router.route('/:thoughtId/reactions/:reactionId').delete(removeReaction);
 
 
-module.exports - router;
+module.exports = router;

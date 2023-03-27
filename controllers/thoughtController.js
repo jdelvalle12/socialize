@@ -81,10 +81,10 @@ module.exports = {
 createReaction(req, res) {
   req.body.reactionBody = 'some value';
   Reaction.create(req.body)
-    .then((newReaction) => {
+    .then((reaction) => {
       Thought.findOneAndUpdate(
-        { _id: req.body.thought_id},
-        { $addToSet: {reactions: newReaction.reactionId}},
+        { thought_id: req.body.thought_id},
+        { $addToSet: {reaction: req.body.reaction_id}},
         { new: true, runValidators: true }
       )
       .then((updatedThoughtData) =>{
@@ -127,7 +127,7 @@ updateReaction(req, res) {
 removeReaction(req, res) {
   Thought.findOneAndUpdate(
     { _id: req.params.thought_id },
-    { $pull: { reaction: { reactions: req.params.reaction_id } } },
+    { $pull: { reactions: { reactions: req.params.reaction_id } } },
     { runValidators: true, new: true }
   )
     .then((thought) =>

@@ -8,20 +8,20 @@ const friendCount = async () =>
     .then((numberOfFriends) => numberOfFriends);
 
 // Aggregate function for getting the overall friend count using $avg
-// const overallFriendCount = async (userId) =>
-//   User.aggregate([
-//     // only include the given user by using $match
-//     { $match: { _id: ObjectId(userId) } },
-//     {
-//       $unwind: '$friends',
-//     },
-//     {
-//       $group: {
-//         _id: ObjectId(userId),
-//         friendCount: { $avg: { $size:'$friends'} },
-//       },
-//     },
-//   ]);
+const friend = async (friendId) =>
+  User.aggregate([
+    // only include the given user by using $match
+    { $match: { _id: ObjectId(userId) } },
+    {
+      $unwind: '$friends',
+    },
+    {
+      $group: {
+        _id: ObjectId(userId),
+        friendCount: { $avg: { $size:'$friends'} },
+      },
+    },
+  ]);
 
 module.exports = {
   // Get all users
@@ -48,7 +48,7 @@ module.exports = {
   },
   // Get a single user
   getSingleUser(req, res) {
-    User.findOne({ _id: req.params.userId })
+    User.findOne({ userId: req.params.friendId })
       .select('-__v')
       .populate('friends')
       .populate('thoughts')
@@ -57,7 +57,7 @@ module.exports = {
           ? res.status(404).json({ message: 'No user with that ID' })
           : res.json({
               user,
-              friend: await friend(req.params.userId),
+              friend: await friend(req.params.friendId),
             })
       )
       .catch((err) => {
@@ -74,7 +74,7 @@ module.exports = {
   // Update a user 
   updateUser(req, res) {
     User.findOneAndUpdate(
-      { _id: req.params.userId },
+      { userId: req.params.userId },
       { $set: req.body },
       { runValidators: true, new: true }
     )
@@ -131,8 +131,8 @@ module.exports = {
   // Remove a friend from a user
   removeFriend(req, res) {
     User.findOneAndUpdate(
-      { _id: req.params.userId },
-      { $pull: { friends: { friendId: req.params.friendId } } },
+      { _id: req.params.id },
+      { $pull: { friends: { friend_id: req.params.friend_id } } },
       { runValidators: true, new: true }
     )
       .then((user) =>

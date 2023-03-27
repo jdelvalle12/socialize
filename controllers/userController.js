@@ -1,5 +1,6 @@
-// const { ObjectId } = require('mongoose').Types;
+const { ObjectId } = require('mongoose').Types;
 const { User, Thought } = require('../models');
+
 
 // Aggregate function to get the number of users overall
 const friendCount = async () =>
@@ -8,16 +9,16 @@ const friendCount = async () =>
     .then((numberOfFriends) => numberOfFriends);
 
 // Aggregate function for getting the overall friend count using $avg
-const friend = async (friendId) =>
+const friends = async (friend_id) =>
   User.aggregate([
     // only include the given user by using $match
-    { $match: { _id: ObjectId(userId) } },
+    { $match: { _id: ObjectId(friend_id) } },
     {
-      $unwind: '$friends',
+      // $unwind: '$friends',
     },
     {
       $group: {
-        _id: ObjectId(userId),
+        user_id: ObjectId(friend_id),
         friendCount: { $avg: { $size:'$friends'} },
       },
     },
@@ -33,12 +34,12 @@ module.exports = {
           users,
           friendCount: await friendCount(),
         };
-        // Add reaction count for each thought in each user's thoughts array
-      for (const user of userObj.users) {
-        for (const thought of user.thoughts) {
-          thought.reactionCount = await getReactionCount(thought._id);
-        }
-      }
+      //   // Add reaction count for each thought in each user's thoughts array
+      // for (const user of userObj.users) {
+      //   for (const thought of user.thoughts) {
+      //     thought.reactionCount = await getReactionCount(thought._id);
+      //   }
+      // }
         return res.json(userObj);
       })
       .catch((err) => {
@@ -48,7 +49,9 @@ module.exports = {
   },
   // Get a single user
   getSingleUser(req, res) {
-    User.findOne({ userId: req.params.friendId })
+    console.log(req.params.user_id);
+    console.log(req.params);
+    User.findOne({ _id: req.params._id })
       .select('-__v')
       .populate('friends')
       .populate('thoughts')
@@ -57,7 +60,7 @@ module.exports = {
           ? res.status(404).json({ message: 'No user with that ID' })
           : res.json({
               user,
-              friend: await friend(req.params.friendId),
+              friends: await friends(req.params.friend_id),
             })
       )
       .catch((err) => {
@@ -114,9 +117,10 @@ module.exports = {
   addFriend(req, res) {
     console.log('You are adding a friend');
     console.log(req.body);
+    console.log(req.body.friend_id);
     User.findOneAndUpdate(
-      { _id: req.params.userId },
-      { $addToSet: { friends: req.body } },
+      { user_id: req.params.friend_id },
+      { $addToSet: { friends: req.body.friend_id } },
       { runValidators: true, new: true }
     )
       .then((user) =>
@@ -131,7 +135,7 @@ module.exports = {
   // Remove a friend from a user
   removeFriend(req, res) {
     User.findOneAndUpdate(
-      { _id: req.params.id },
+      { _id: req.params.user_id },
       { $pull: { friends: { friend_id: req.params.friend_id } } },
       { runValidators: true, new: true }
     )

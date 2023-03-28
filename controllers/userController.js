@@ -1,4 +1,4 @@
-const { ObjectId } = require('mongoose').Types;
+// const { ObjectId } = require('mongoose').Types;
 const { User, Thought } = require('../models');
 
 
@@ -9,20 +9,20 @@ const friendCount = async () =>
     .then((numberOfFriends) => numberOfFriends);
 
 // Aggregate function for getting the overall friend count using $avg
-const friends = async (friend_id) =>
-  User.aggregate([
-    // only include the given user by using $match
-    { $match: { _id: ObjectId(friend_id) } },
-    {
-      // $unwind: '$friends',
-    },
-    {
-      $group: {
-        user_id: ObjectId(friend_id),
-        friendCount: { $avg: { $size:'$friends'} },
-      },
-    },
-  ]);
+// const friends = async (friend_id) =>
+//   User.aggregate([
+//     // only include the given user by using $match
+//     { $match: { _id: ObjectId(friend_id) } },
+//     {
+//       // $unwind: '$friends',
+//     },
+//     {
+//       $group: {
+//         user_id: ObjectId(friend_id),
+//         friendCount: { $avg: { $size:'$friends'} },
+//       },
+//     },
+//   ]);
 
 module.exports = {
   // Get all users
@@ -33,13 +33,13 @@ module.exports = {
         const userObj = {
           users,
           friendCount: await friendCount(),
-        };
-      //   // Add reaction count for each thought in each user's thoughts array
+      //   };
+      //   Add reaction count for each thought in each user's thoughts array
       // for (const user of userObj.users) {
       //   for (const thought of user.thoughts) {
       //     thought.reactionCount = await getReactionCount(thought._id);
       //   }
-      // }
+      }
         return res.json(userObj);
       })
       .catch((err) => {
@@ -49,19 +49,16 @@ module.exports = {
   },
   // Get a single user
   getSingleUser(req, res) {
-    console.log(req.params.user_id);
+    console.log(req.params.userId);
     console.log(req.params);
-    User.findOne({ _id: req.params._id })
+    User.findOne({ userId: req.params.userId })
       .select('-__v')
       .populate('friends')
       .populate('thoughts')
       .then(async (user) =>
         !user
           ? res.status(404).json({ message: 'No user with that ID' })
-          : res.json({
-              user,
-              friends: await friends(req.params.friend_id),
-            })
+          : res.json({ user })
       )
       .catch((err) => {
         console.log(err);
@@ -90,7 +87,8 @@ module.exports = {
   },
   // Delete a user and remove them 
   deleteUser(req, res) {
-    User.findOneAndRemove({ _id: req.params.userId })
+    const deletedUserId = req.params.userId;
+    User.findOneAndRemove({ _id: deletedUserId })
       .then((user) =>
         !user
           ? res.status(404).json({ message: 'No such user exists' })
@@ -103,7 +101,7 @@ module.exports = {
       .then((user) =>
         !user
           ? res.status(404).json({
-              message: 'user deleted, but no users found',
+              message: 'user deleted, no users found',
             })
           : res.json({ message: 'user successfully deleted' })
       )
@@ -116,11 +114,11 @@ module.exports = {
   // Add a friend to a user
   addFriend(req, res) {
     console.log('You are adding a friend');
-    console.log(req.body);
-    console.log(req.body.friend_id);
+    console.log(req.params);
+    console.log(req.params.user_id);
     User.findOneAndUpdate(
-      { user_id: req.params.friend_id },
-      { $addToSet: { friends: friends._id } },
+      { user_id: req.params.user_id },
+      { $addToSet: { friends: req.params.friend_id } },
       { runValidators: true, new: true }
     )
       .then((user) =>
@@ -134,16 +132,15 @@ module.exports = {
   },
   // Remove a friend from a user
   removeFriend(req, res) {
-    User.findOneAndUpdate(
-      { _id: req.params.user_id },
-      { $pull: { friends: { friend_id: req.params.friend_id } } },
-      { runValidators: true, new: true }
-    )
+    User.findOneAndUpdate({ user_id: req.params.user_id },
+      { $pull: {friends: req.body.user_id} },
+      {new: true}
+      )
       .then((user) =>
         !user
           ? res
               .status(404)
-              .json({ message: 'No user found with that ID :(' })
+              .json({ message: 'User not found :(' })
           : res.json(user)
       )
       .catch((err) => res.status(500).json(err));

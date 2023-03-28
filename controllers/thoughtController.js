@@ -1,7 +1,7 @@
 const { User, Thought, Reaction } = require('../models');
 
 // Aggregate function to get the number of reactions overall
-const reactionCount = async (thought_id) => {
+const getReactionCount = async (thought_id) => {
   const reactionCount = await Thought.aggregate([
     { $match: { thought_id: thought_id } },
     { $project: { reactionCount: { $size: '$reaction' } } },
@@ -79,12 +79,11 @@ module.exports = {
 
 // Create a reaction
 createReaction(req, res) {
-  
  Reaction.create(req.body)
   .then((reaction) => {
       Thought.findOneAndUpdate(
         { thought_id: req.params.thought_id},
-        { $addToSet: {reactions: reaction._id}},
+        { $addToSet: {reactions: reaction}},
         { new: true, runValidators: true }
       )
       .then((updatedThoughtData) =>{
@@ -105,37 +104,21 @@ createReaction(req, res) {
       return res.status(500).json(err);
     });
 },
-// Update a reaction to a thought
-updateReaction(req, res) {
-  console.log('You are updating a reaction');
-  console.log(req.body);
-  Thought.findOneAndUpdate(
-    { thought_id: req.params.thought_id },
-    { $addToSet: { reactions: req.body.reaction_id } },
-    { runValidators: true, new: true }
-  )
-    .then((thought) =>
-      !thought
-        ? res
-            .status(404)
-            .json({ message: 'No reaction found with that ID :(' })
-        : res.json(thought)
-    )
-    .catch((err) => res.status(500).json(err));
-  },
+
 // Remove a reaction from a thought
 removeReaction(req, res) {
-  Thought.findOneAndUpdate(
-    { _id: req.params.thought_id },
-    { $pull: { reactions: { reactions: req.params.reaction_id } } },
-    { runValidators: true, new: true }
+  Reaction.findOneAndDelete(
+    { reaction_id: req.params.reaction_id }
   )
-    .then((thought) =>
-      !thought
+    .then((reaction) =>
+      !reaction
         ? res
             .status(404)
-            .json({ message: 'No user found with that ID :(' })
-        : res.json(thought)
+            .json({ message: 'Reaction not found :(' })
+        : Thought.deleteMany({ reactions: { $in: [req.params.reaction_id] } },
+          {$pull: {reactions: req.params.reaction_id } }
+          )
+          .then(() => res.json({message: 'Reaction removed successfully!'}))
     )
     .catch((err) => res.status(500).json(err));
     }

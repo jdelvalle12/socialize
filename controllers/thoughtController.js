@@ -1,7 +1,7 @@
 const { User, Thought, Reaction } = require('../models');
 
 // Aggregate function to get the number of reactions overall
-const getReactionCount = async (thought_id) => {
+const reactionCount = async (thought_id) => {
   const reactionCount = await Thought.aggregate([
     { $match: { thought_id: thought_id } },
     { $project: { reactionCount: { $size: '$reaction' } } },
@@ -79,20 +79,20 @@ module.exports = {
 
 // Create a reaction
 createReaction(req, res) {
-  req.body.reactionBody = 'some value';
-  Reaction.create(req.body)
-    .then((reaction) => {
+  
+ Reaction.create(req.body)
+  .then((reaction) => {
       Thought.findOneAndUpdate(
-        { thought_id: req.body.thought_id},
-        { $addToSet: {reaction: req.body.reaction_id}},
+        { thought_id: req.params.thought_id},
+        { $addToSet: {reactions: reaction._id}},
         { new: true, runValidators: true }
       )
       .then((updatedThoughtData) =>{
         if(!updatedThoughtData) {
-          return res.status(404).send('Thought ID does not exist');
+          res.status(404).send('Thought ID does not exist');
         } else {
           console.log(updatedThoughtData);
-          res.status(201).json(updatedThoughtData);
+          res.status(201).json(reaction);
         }
       })
       .catch((err) => {
@@ -110,8 +110,8 @@ updateReaction(req, res) {
   console.log('You are updating a reaction');
   console.log(req.body);
   Thought.findOneAndUpdate(
-    { _id: req.params.thought_id },
-    { $addToSet: { reaction: req.body.reaction_id } },
+    { thought_id: req.params.thought_id },
+    { $addToSet: { reactions: req.body.reaction_id } },
     { runValidators: true, new: true }
   )
     .then((thought) =>

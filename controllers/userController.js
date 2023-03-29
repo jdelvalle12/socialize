@@ -18,11 +18,11 @@ const friendCount = async () =>
 //     },
 //     {
 //       $group: {
-//         user_id: ObjectId(friend_id),
+//         userId: ObjectId(friend_id),
 //         friendCount: { $avg: { $size:'$friends'} },
 //       },
 //     },
-//   ]);
+  // ]);
 
 module.exports = {
   // Get all users
@@ -31,7 +31,7 @@ module.exports = {
     .populate('thoughts')
       .then(async (users) => {
         const userObj = {
-          users,
+          users
       //     friendCount: await friendCount(),
       // //   };
       // //   Add reaction count for each thought in each user's thoughts array
@@ -51,7 +51,7 @@ module.exports = {
   getSingleUser(req, res) {
     console.log(req.params.userId);
     console.log(req.params);
-    User.findOne({ user_id: req.params.user_id })
+    User.findOne({ _id: req.params.userId })
       .select('-__v')
       .populate('friends')
       .populate('thoughts')
@@ -74,7 +74,7 @@ module.exports = {
   // Update a user 
   updateUser(req, res) {
     User.findOneAndUpdate(
-      { userId: req.params.userId },
+      { _id: req.params.userId },
       { $set: req.body },
       { runValidators: true, new: true }
     )
@@ -92,8 +92,8 @@ module.exports = {
       .then((user) =>
         !user
           ? res.status(404).json({ message: 'No such user exists' })
-          : user.findOneAndUpdate(
-              { users: req.params.userId },
+          : User.findOneAndUpdate(
+              { userId: req.params.userId },
               { $pull: { users: req.params.userId } },
               { new: true }
             )
@@ -117,8 +117,8 @@ module.exports = {
     console.log('-----------',req.params );
     
     User.findOneAndUpdate(
-      { user_id: req.params.user_id },
-      { $addToSet: { friends: req.params.friend_id } },
+      { userId: req.params.userId },
+      { $addToSet: { friends: req.params.userId } },
       { runValidators: true, new: true }
     )
       .then((user) =>
@@ -132,8 +132,8 @@ module.exports = {
   },
   // Remove a friend from a user
   removeFriend(req, res) {
-    User.findOneAndUpdate({ user_id: req.params.user_id },
-      { $pull: {friends: req.body.user_id} },
+    User.findOneAndUpdate({ userId: req.params.userId },
+      { $pull: {friends: req.params.userId} },
       {new: true}
       )
       .then((user) =>

@@ -32,13 +32,13 @@ module.exports = {
       .then(async (users) => {
         const userObj = {
           users,
-          friendCount: await friendCount(),
-      //   };
-      //   Add reaction count for each thought in each user's thoughts array
-      // for (const user of userObj.users) {
-      //   for (const thought of user.thoughts) {
-      //     thought.reactionCount = await getReactionCount(thought._id);
-      //   }
+      //     friendCount: await friendCount(),
+      // //   };
+      // //   Add reaction count for each thought in each user's thoughts array
+      // // for (const user of userObj.users) {
+      // //   for (const thought of user.thoughts) {
+      // //     thought.reactionCount = await getReactionCount(thought._id);
+      // //   }
       }
         return res.json(userObj);
       })
@@ -51,7 +51,7 @@ module.exports = {
   getSingleUser(req, res) {
     console.log(req.params.userId);
     console.log(req.params);
-    User.findOne({ userId: req.params.userId })
+    User.findOne({ user_id: req.params.user_id })
       .select('-__v')
       .populate('friends')
       .populate('thoughts')
@@ -114,8 +114,8 @@ module.exports = {
   // Add a friend to a user
   addFriend(req, res) {
     console.log('You are adding a friend');
-    console.log(req.params);
-    console.log(req.params.user_id);
+    console.log('-----------',req.params );
+    
     User.findOneAndUpdate(
       { user_id: req.params.user_id },
       { $addToSet: { friends: req.params.friend_id } },
